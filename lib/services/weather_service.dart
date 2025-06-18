@@ -1,37 +1,47 @@
-import 'dart:convert';
 import 'dart:developer';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:weather_app/models/weather_model.dart';
 
 class WeatherService {
   WeatherService();
 
-  String baseUrl = "http://api.weatherapi.com/v1";
-  String apiKey = "3677bed892474b30b7a122242220806";
+  final String baseUrl = "http://api.weatherapi.com/v1";
+  final String apiKey = "3677bed892474b30b7a122242220806";
+  final Dio dio = Dio();
 
   Future<WeatherModel> getCurrentWeather({required String cityName}) async {
     try {
-      final url = Uri.parse(
-        '$baseUrl/forecast.json?key=$apiKey&q=$cityName&days=7',
+      final response = await dio.get(
+        '$baseUrl/forecast.json',
+        queryParameters: {'key': apiKey, 'q': cityName, 'days': 7},
       );
-      final response = await http.get(url);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        WeatherModel weatherModel = WeatherModel.fromJson(data);
-        return weatherModel;
-      } else {
-        final errorData = jsonDecode(response.body);
-        final errorMessage =
-            errorData['error']['message'] ??
-            "An error occurred, try again later.";
-        throw Exception(errorMessage);
+      WeatherModel weatherModel = WeatherModel.fromJson(response.data);
+      return weatherModel;
+    } on DioException catch (e) {
+      String errorMessage = "An unexpected error occurred. Please try again.";
+
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = "Connection timed out. Please check your internet.";
+      } else if (e.type == DioExceptionType.badResponse) {
+        final statusCode = e.response?.statusCode;
+        final serverMessage = e.response?.data['error']?['message'];
+
+        if (statusCode == 400 || statusCode == 404) {
+          errorMessage = serverMessage ?? "City not found.";
+        } else {
+          errorMessage = serverMessage ?? "Server error. Please try again.";
+        }
+      } else if (e.type == DioExceptionType.unknown) {
+        errorMessage = "No internet connection or unexpected error occurred.";
       }
-    } catch (e) {
-      log(e.toString());
-      throw Exception(
-        "An error occurred while fetching data. Try again later.",
-      );
+
+      log("Dio error: ${e.message}");
+      throw Exception(errorMessage);
+    } catch (e, stackTrace) {
+      log("Unexpected error: $e", stackTrace: stackTrace);
+      throw Exception("Something went wrong. Please try again later.");
     }
   }
 }
