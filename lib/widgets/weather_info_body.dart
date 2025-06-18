@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:weather_app/cubit/weather_cubit_cubit.dart';
+import 'package:weather_app/view_models/weather_cubit_cubit.dart';
 import 'custom_text.dart';
 
 class WeatherInfoBody extends StatelessWidget {
@@ -11,7 +11,7 @@ class WeatherInfoBody extends StatelessWidget {
     final weatherModel = BlocProvider.of<WeatherCubit>(context).weatherModel;
 
     if (weatherModel == null) {
-      return const Center(child: Text("لا توجد بيانات طقس متاحة"));
+      return const Center(child: Text("No weather data available"));
     }
 
     final themeColor = weatherModel.getThemeColor();

@@ -31,14 +31,14 @@ class HomePage extends StatelessWidget {
         builder: (context, state) {
           if (state is WeatherInitial) {
             return const NoWeatherBody();
+          } else if (state is WeatherLoadedState) {
+            return const Center(child: CircularProgressIndicator());
           } else if (state is WeatherSuccessState) {
             return const WeatherInfoBody();
           } else if (state is WeatherFailureState) {
             return const Center(
               child: Text("An error occurred while loading data."),
             );
-          } else if (state is WeatherLoadedState) {
-            return const Center(child: CircularProgressIndicator());
           } else {
             return const SizedBox();
           }
