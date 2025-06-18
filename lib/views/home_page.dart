@@ -28,6 +28,8 @@ class HomePage extends StatelessWidget {
         title: const CustomText(text: "Weather App"),
       ),
       body: BlocBuilder<WeatherCubit, WeatherState>(
+        buildWhen: (previous, current) =>
+            previous.runtimeType != current.runtimeType,
         builder: (context, state) {
           if (state is WeatherInitial) {
             return const NoWeatherBody();
